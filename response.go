@@ -19,12 +19,18 @@ type Response struct {
 	onComplete []func(*Response)
 }
 
-// newResponse wraps env in a Response bound to it. The status/headers/body
-// snapshots are refreshed by [Response.finish] once the adapter has produced a
-// result, so response middleware that rewrite env.ResponseBody are reflected.
+// newResponse wraps env in a Response bound to it, snapshotting the response
+// half the adapter has just produced so a middleware raising from a status (e.g.
+// raise_error) sees the correct Status/Headers/Body immediately. The snapshot is
+// refreshed by [Response.finish] once the whole stack has unwound, so response
+// middleware that rewrite env.ResponseBody (e.g. the JSON parser) are reflected.
 func newResponse(env *Env) *Response {
 	r := &Response{env: env}
 	env.response = r
+	r.status = env.Status
+	r.headers = env.ResponseHeaders
+	r.body = env.ResponseBody
+	r.reason = env.Reason
 	return r
 }
 

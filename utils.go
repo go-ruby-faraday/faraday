@@ -6,7 +6,6 @@ package faraday
 
 import (
 	"encoding/base64"
-	"sort"
 	"strings"
 )
 
@@ -15,31 +14,25 @@ import (
 // escape/unescape pair, and the Basic-auth header builder. They are package-level
 // functions here; the type alias documents the grouping for the Ruby surface.
 //
-// The query codec mirrors Faraday's FlatParamsEncoder: keys are emitted in
-// ascending byte order and each key and value is escaped with [Escape] (space
-// becomes '+', the RFC-3986 unreserved set plus '.' is left literal, every other
-// byte is %XX with upper-case hex). A flat string→string [Params] encodes
-// identically under Faraday's default NestedParamsEncoder, so the output matches
-// the gem for scalar params.
+// The query codec mirrors Faraday::Utils.build_query / parse_query: params are
+// emitted in their given order (Faraday does not sort — an ordered [Params]
+// reproduces the gem's Hash/array order) and each key and value is escaped with
+// [Escape] (space becomes '+', the unreserved set [A-Za-z0-9 .\-_~] is left
+// literal, every other byte is %XX with upper-case hex).
 
 // BuildQuery renders params as an application/x-www-form-urlencoded query string,
-// byte-faithful to Faraday::Utils.build_query (via the flat params encoder):
-// keys sorted ascending, each key and value run through [Escape].
+// byte-faithful to Faraday::Utils.build_query: the params are emitted in
+// insertion order (Faraday preserves the params' order rather than sorting) and
+// each key and value is run through [Escape].
 func BuildQuery(params *Params) string {
-	keys := make([]string, 0, params.Len())
-	for _, p := range params.pairs {
-		keys = append(keys, p.Key)
-	}
-	sort.Strings(keys)
 	var b strings.Builder
-	for i, k := range keys {
+	for i, p := range params.pairs {
 		if i > 0 {
 			b.WriteByte('&')
 		}
-		v, _ := params.Get(k)
-		b.WriteString(Escape(k))
+		b.WriteString(Escape(p.Key))
 		b.WriteByte('=')
-		b.WriteString(Escape(v))
+		b.WriteString(Escape(p.Val))
 	}
 	return b.String()
 }

@@ -12,7 +12,8 @@
 //
 // Everything Faraday does *around* the wire is deterministic and needs no
 // interpreter, so it lives here as pure Go: building the request URL (path
-// resolution against the base URL, sorted+escaped query strings), running the
+// resolution against the base URL, order-preserving escaped query strings),
+// running the
 // request through the middleware stack (url-encoded and JSON body encoding, Basic
 // and token authorization, JSON response parsing, status→error mapping, logging),
 // and exposing the [Response]. The HTTP round-trip itself is a host seam: the

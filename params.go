@@ -12,8 +12,8 @@ type Pair struct {
 
 // Params is an insertion-ordered string→string map used for request query
 // parameters and url-encoded bodies. Ruby's Faraday threads plain Hashes through
-// the flow; this ordered map mirrors that while giving deterministic iteration
-// and stable, sorted output for query strings (see [BuildQuery]).
+// the flow; this ordered map mirrors that, giving deterministic, order-preserving
+// output for query strings (see [BuildQuery]).
 type Params struct {
 	pairs []Pair
 	index map[string]int
@@ -103,5 +103,6 @@ func (p *Params) Merge(other *Params) *Params {
 	return out
 }
 
-// Encode renders the params as a sorted, escaped query string (see [BuildQuery]).
+// Encode renders the params as an order-preserving, escaped query string (see
+// [BuildQuery]).
 func (p *Params) Encode() string { return BuildQuery(p) }

@@ -152,7 +152,8 @@ func (c *Connection) RunRequest(method, path string, body any, headers *Headers,
 
 // BuildURL resolves path against the connection's base URL and appends the merged
 // query params (base-URL query overlaid by the request params), mirroring
-// Faraday::Connection#build_url. Keys are sorted and escaped by [BuildQuery].
+// Faraday::Connection#build_url. Params keep their order and are escaped by
+// [BuildQuery].
 func (c *Connection) BuildURL(path string, params *Params) string {
 	u := c.resolve(path)
 	merged := ParseQuery(u.RawQuery)
