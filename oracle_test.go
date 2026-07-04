@@ -17,15 +17,22 @@ import (
 // absent — the qemu cross-arch and Windows lanes — so the deterministic,
 // ruby-free suite alone holds the 100% coverage gate there.
 
-// gemRuby reports a ruby with the faraday gem loadable, or skips.
+// gemRuby reports a ruby whose faraday gem exposes the Faraday::Utils helpers we
+// diff against, or skips. It checks the helpers explicitly because some CI
+// runners preinstall an older/slimmer faraday that loads but lacks them (e.g.
+// basic_header_from) — on those the deterministic suite alone holds coverage.
 func gemRuby(t *testing.T) string {
 	t.Helper()
 	bin, err := exec.LookPath("ruby")
 	if err != nil {
 		t.Skip("ruby not on PATH; skipping faraday-gem oracle")
 	}
-	if err := exec.Command(bin, "-rfaraday", "-e", "1").Run(); err != nil {
-		t.Skip("faraday gem not installed; skipping oracle")
+	probe := `require "faraday"
+u = Faraday::Utils
+need = %i[escape unescape build_query parse_query basic_header_from]
+exit(need.all? { |m| u.respond_to?(m) } ? 0 : 1)`
+	if err := exec.Command(bin, "-e", probe).Run(); err != nil {
+		t.Skip("faraday gem absent or too old for the Utils oracle; skipping")
 	}
 	return bin
 }
